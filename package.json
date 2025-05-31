@@ -1,17 +1,20 @@
 {
-      "name": "talentflow-app",
-      "version": "0.1.0",
-      "private": true,
-      "dependencies": {
-        "@google/genai": "^1.2.0"
-      },
-      "devDependencies": {
-        "typescript": "^5.0.0",
-        "esbuild": "^0.20.0"
-      },
-      "scripts": {
-        "dev": "echo \"No dev script configured, use Vercel CLI or similar for local dev with serverless functions.\"",
-        "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/app.js --jsx=automatic --platform=browser --format=esm --external:react --external:react-dom/client --external:@google/genai --external:pdfjs-dist --external:pdfjs-dist/build/pdf.worker.mjs",
-        "start": "echo \"No start script, deploy to Vercel.\""
-      }
-    }
+  "name": "talentflow-app",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@google/genai": "^1.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0",
+    "esbuild": "^0.20.0"
+  },
+  "scripts": {
+    "dev": "echo \"No dev script configured, use Vercel CLI or similar for local dev with serverless functions.\"",
+    "build": "mkdir -p dist && esbuild index.tsx --bundle --outfile=dist/app.js --jsx=automatic --platform=browser --format=esm --external:react --external:react-dom/client --external:@google/genai --external:pdfjs-dist --external:pdfjs-dist/build/pdf.worker.mjs",
+    "start": "echo \"No start script, deploy to Vercel.\""
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
