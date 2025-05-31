@@ -1,0 +1,6 @@
+{
+  "name": "TalentFlow - Applicant Tracking System",
+  "description": "A comprehensive talent acquisition platform featuring a Contextual Relevance Score (CRS) Generator, candidate management, requisition tracking, and reporting. Helps streamline the hiring process.",
+  "requestFramePermissions": [],
+  "prompt": ""
+}
