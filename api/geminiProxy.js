@@ -1,5 +1,5 @@
 
-import { GoogleGenAI } from "@google/genai";
+const { GoogleGenAI } = require("@google/genai");
 
 // This function will be a Vercel Serverless Function
 // It expects a POST request with a JSON body:
@@ -65,7 +65,7 @@ The main 'explanation' should be a concise high-level summary.
 'weaknesses' should list up to 2-3 areas for improvement relative to the JD.`;
 
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Credentials', true);
   res.setHeader('Access-Control-Allow-Origin', '*'); // Or a specific origin
@@ -87,7 +87,7 @@ export default async function handler(req, res) {
 
   if (!API_KEY) {
     console.error("API_KEY environment variable not set for serverless function.");
-    res.status(500).json({ error: "Internal server configuration error." });
+    res.status(500).json({ error: "Internal server configuration error: API_KEY missing." });
     return;
   }
 
@@ -201,22 +201,48 @@ None specified.
       res.status(200).json(parsedData);
     } catch (parseError) {
       console.error("Failed to parse JSON response from Gemini:", jsonStr, parseError);
-      res.status(500).json({ error: `Failed to parse AI response. Raw response snippet: ${jsonStr.substring(0,200)}` });
+      res.status(500).json({ error: `Failed to parse AI response. Raw response snippet: ${jsonStr.substring(0,200)}`, details: parseError.message });
     }
 
-  } catch (error) {
-    console.error('Error calling Gemini API via proxy:', error);
+  } catch (apiError) {
+    console.error('Error calling Gemini API via proxy:', apiError); // Full error to Vercel logs
+    
     let errorMessage = 'An unknown error occurred while communicating with the AI service.';
-    if (error.message) {
-        errorMessage = `AI API Error: ${error.message}`;
-    } else if (typeof error === 'string') {
-        errorMessage = error;
+    let errorDetailsPayload = {};
+
+    if (apiError instanceof Error) {
+        errorMessage = `AI API Error: ${apiError.message}`;
+        // Attempt to get more structured details if available
+        const cause = apiError.cause;
+        const details = (apiError).details; // Assuming details might be on the error object
+        const code = (apiError).code; // Assuming code might be on the error object
+        // const responseData = (apiError).response?.data; // Example for Axios-like errors
+
+        if (cause) errorDetailsPayload.cause = cause.toString();
+        if (details) errorDetailsPayload.details = details;
+        if (code) errorDetailsPayload.code = code;
+        // if (responseData) errorDetailsPayload.responseData = responseData;
+        
+        // For GoogleGenAI specific errors, they might have a `status` or `errorInfo`
+        if ((apiError).status) errorDetailsPayload.status = (apiError).status;
+        if ((apiError).errorInfo) errorDetailsPayload.errorInfo = (apiError).errorInfo;
+
+
+    } else if (typeof apiError === 'string') {
+        errorMessage = apiError;
+    } else {
+        // Try to stringify if it's some other object, for more context
+        try {
+            const stringifiedError = JSON.stringify(apiError);
+            errorDetailsPayload.untypedError = JSON.parse(stringifiedError); // Ensure it's a clean object
+        } catch (e) {
+            errorDetailsPayload.unparseableErrorObject = true;
+        }
     }
-    res.status(500).json({ error: errorMessage });
+    
+    res.status(500).json({ 
+      error: errorMessage, 
+      ...(Object.keys(errorDetailsPayload).length > 0 && { details: errorDetailsPayload }) 
+    });
   }
 }
-
-// Helper for Vercel Edge Functions (if needed to parse body, but Vercel handles this for Node.js runtime)
-// export const config = {
-//   runtime: 'edge', // or 'nodejs' (default)
-// };
